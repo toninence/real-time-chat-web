@@ -24,6 +24,13 @@ app.use(cors())
 
 io.on('connect', socket => {
     console.log('Helou moto');
+    socket.on('join', (data, callback) => {
+      console.log(data);
+      const error = true;
+      if(error){
+        callback({'error': error})
+      }
+    });
     socket.on('disonnect', () => {
         console.log('user has left');
     })
