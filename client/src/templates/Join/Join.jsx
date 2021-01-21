@@ -1,20 +1,38 @@
-import React, {useState} from 'react';
-import { Link } from 'react-router-dom';
-import './join.css'
-export default function Join() {
-    const [ name, setName ] = useState('');
-    const [room, setRoom] = useState('');
+import React from "react";
+import Container from "@material-ui/core/Container";
+import Grid from "@material-ui/core/Grid";
+import { withStyles } from "@material-ui/core";
+import JoinForm from "../../molecules/JoinForm/JoinForm";
+// import './join.css'
 
-    return (
-        <div className='joinOuterContainer'>
-            <div className='joinInnerContainer'>
-            <h1 className='heading'>Join</h1>
-            <div><input placeholder='name' className='joinInput' type='text' onChange={ event => setName(event.target.value) } /></div>
-            <div><input placeholder='room' className='joinInput mt-20' type='text' onChange={ event => setRoom(event.target.value) } /></div>
-            <Link onClick={ev => (!name || !room) ? ev.preventDefault(): null} to={`/chat?name=${name}&room=${room}`}>
-            <button className='button mt-20' type='submit'>Sign In</button>
-            </Link>
-            </div>
-        </div>
-    )
+const StyledContainer = withStyles({
+  root: {
+    background:
+      "linear-gradient(180deg, rgba(82,55,117,1) 42%, rgba(88,94,98,1) 100%)",
+    height: "100vh",
+    maxWidth: "100%",
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'center'
+  },
+})(Container);
+
+
+export default function Join() {
+  return (
+    <StyledContainer>
+      <Grid
+        container
+        xs={8}
+        sm={5}
+        md={5}
+        direction="column"
+        justify="center"
+        alignItems="center"
+        style={{ height: "100%" }}
+      >
+          <JoinForm />
+      </Grid>
+    </StyledContainer>
+  );
 }
