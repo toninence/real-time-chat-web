@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import queryString from "query-string";
 import io from "socket.io-client";
 import InputSendMessage from "../../molecules/Inputs/InputSendMessage";
-import InfoBar from "../../molecules/InfoBar/InfoBar";
 import Messages from "../../molecules/Messages/Messages";
 import {
   withStyles,
@@ -14,11 +13,13 @@ import {
   Grid,
   Container,
   Button,
+  Hidden,
 } from "@material-ui/core";
 import {
   Close as CloseIcon,
   FiberManualRecord as FiberManualRecordIcon,
 } from "@material-ui/icons";
+import RoomData from "../../molecules/RoomData/RoomData";
 
 let socket;
 const StyledGrid = withStyles({
@@ -33,7 +34,7 @@ const StyledGrid = withStyles({
 const StyledContainer = withStyles({
   root: {
     background:
-      "linear-gradient(180deg, rgba(82,55,117,1) 42%, rgba(88,94,98,1) 100%)",
+      "linear-gradient(180deg, rgba(0,0,0,1) 42%, rgba(88,94,98,1) 100%)",
     height: "100vh",
     maxWidth: "100%",
     display: "flex",
@@ -44,41 +45,47 @@ const StyledContainer = withStyles({
 export default function Chat({ location }) {
   const [name, setName] = useState("");
   const [room, setRoom] = useState("");
+  const [avatar, setAvatar] = useState("");
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const [roomData, setRoomData] = useState("");
-  const ENDPOINT = "localhost:5000";
+  const ENDPOINT = "https://gfwebsocketchat.herokuapp.com/";
+  // const ENDPOINT = "http://localhost:5000";
 
   useEffect(() => {
-    const { name, room } = queryString.parse(location.search);
+    const { name, room, avatar } = queryString.parse(location.search);
 
     socket = io(ENDPOINT);
     // console.log(socket);
     setName(name);
     setRoom(room);
+    setAvatar(avatar)
 
     socket.emit("join", { name, room }, () => {});
     // return () => {
     //     socket.emit('disconnect');
     //     socket.off();
     // }
-    console.log('se une a la sala de chat');
+    console.log("se une a la sala de chat");
   }, [ENDPOINT, location.search]);
 
-// Recibo un mensaje desde el socket y lo agrego al state de mensajes
-  useEffect(() => {
-    socket.on("message", (message) => {
-      setMessages([...messages, message]);
-    });
-  }, [messages]);
+  // Recibo un mensaje desde el socket y lo agrego al state de mensajes
 
-  // Funcion para traer los datos del room (Nombre y todos los usuarios activos)
   useEffect(() => {
     socket.on("roomData", (data) => {
       setRoomData(data);
-      console.log(data);
+      console.log("Actualizado room data", data);
     });
-  }, [roomData]);
+
+    socket.on("message", (message) => {
+      setMessages([...messages, message]);
+    });
+    return () => {
+      socket.off();
+    };
+  }, [messages, roomData]);
+
+  // Funcion para traer los datos del room (Nombre y todos los usuarios activos)
 
   // Functions for sending messages
   const sendMessage = (event) => {
@@ -97,15 +104,18 @@ export default function Chat({ location }) {
         direction="row"
         justify="center"
         alignItems="center"
-        xs={12}
-        sm={12}
-        md={12}
-        style={{ height: "100%" }}
+        style={{ height: "100%", paddingTop: "10px" }}
+        spacing={2}
       >
-        <Grid item xs={12} md={8} lg={6} style={{ height: "100%" }}>
+        <Hidden xsDown>
+          <Grid item xs={3} style={{ height: "100%" }}>
+            <RoomData roomData={roomData} />
+          </Grid>
+        </Hidden>
+        <Grid item xs={12} sm={9} md={8} lg={6} style={{ height: "100%" }}>
           <Card xs={12} style={{ height: "80%" }}>
             <CardHeader
-              avatar={<Avatar aria-label=""></Avatar>}
+              avatar={<Avatar aria-label="" src={avatar}/>}
               action={
                 <IconButton aria-label="">
                   <a href="/">
@@ -122,12 +132,10 @@ export default function Chat({ location }) {
                   {name}
                 </Button>
               }
-              
               subheader={`Sala ${room}`}
             />
             <CardContent style={{ height: "80%" }}>
               <StyledGrid item>
-                {/* <InfoBar room={room} /> */}
                 <Messages messages={messages} name={name} />
                 <InputSendMessage
                   message={message}

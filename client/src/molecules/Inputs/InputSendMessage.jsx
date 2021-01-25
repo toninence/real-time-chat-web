@@ -17,7 +17,7 @@ export default function InputSendMessage(props) {
                 onKeyPress={(event) =>
                   event.key === "Enter" ? sendMessage(event) : null
                 }
-                style={{width: '100%', paddingRight: '5px'}}
+                style={{width: '95%', paddingRight: '5px'}}
               />
             </Grid>
             <Grid item xs={4} sm={3} md={2}>
@@ -26,8 +26,9 @@ export default function InputSendMessage(props) {
                 color="primary"
                 onClick={(event) => sendMessage(event)}
                 style={{width: '100%'}}
+                endIcon={<SendIcon />}
               >
-                Enviar <SendIcon />
+                Enviar 
               </Button>
             </Grid>
           </Grid>

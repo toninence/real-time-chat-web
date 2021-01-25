@@ -16,15 +16,16 @@ const server = http.createServer(app);
 // Determino las opciones de configuracion del socket
 const io = socketio(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: "https://goofy-feynman-a8dada.netlify.app",
     methods: ["GET", "POST"],
     allowedHeaders: ["my-custom-header"],
     credentials: true,
   },
 });
-
 // Acepta el origen. para evitar problemas de cors
 app.use(cors());
+
+app.use(router);
 
 // Cuando se abre una conexion lo que esta dentro de la funcion se ejecuta segun la peticion.
 io.on("connect", (socket) => {
@@ -33,23 +34,26 @@ io.on("connect", (socket) => {
     const { error, user } = addUser({ id: socket.id, name, room });
     if (error) return callback(error);
 
-    socket.emit("message", {
-      user: "admin",
-      text: `${user.name} welcome to the room ${user.room}`,
-    });
     socket.emit('roomData', {
       room: user.room,
       users: getUsersInRoom(user.room),
     })
+        
+    socket.broadcast
+      .to(user.room)
+      .emit("roomData", { room: user.room, users: getUsersInRoom(user.room), });
+
+    socket.emit("message", {
+      user: "admin",
+      text: `${user.name} welcome to the room ${user.room}`,
+    });
+    
     socket.broadcast
       .to(user.room)
       .emit("message", { user: "admin", text: `${user.name}, has joined!` });
+    
     socket.join(user.room);
 
-    socket.broadcast.to(user.room).emit("roomData", {
-      room: user.room,
-      users: getUsersInRoom(user.room),
-    });
 
     callback();
   });
@@ -66,14 +70,18 @@ io.on("connect", (socket) => {
   socket.on("disconnect", () => {
     const user = removeUser(socket.id);
     if (user) {
+      io.to(user.room).emit("roomData", {
+        room: user.room,
+        users: getUsersInRoom(user.room),
+      });
       io.to(user.room).emit("message", {
         user: "admin",
         text: `${user.name} has left`,
       });
+      console.log(`User ${user.name} has left`);
     }
-    console.log("user has left");
   });
 });
-app.use(router);
+
 
 server.listen(PORT, () => console.log(`Server listen at port ${PORT}`));
